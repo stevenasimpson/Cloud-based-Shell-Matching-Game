@@ -150,7 +150,7 @@ resource "aws_instance" "api_server" {
         aws_security_group.allow_api.id
     ]
 
-    user_data = templatefile("/vagrant/tf-deploy/build-apiserver-vm.tpl", {     mysql_server_endpoint = aws_db_instance.mysql_server.endpoint })
+    user_data = templatefile("${path.module}/build-apiserver-vm.tpl", {     mysql_server_endpoint = aws_db_instance.mysql_server.endpoint })
 
     depends_on = [aws_db_instance.mysql_server]
 
@@ -169,7 +169,7 @@ resource "aws_instance" "web_server" {
         aws_security_group.allow_web.id
     ]
 
-    user_data = templatefile("/vagrant/tf-deploy/build-webserver-vm.tpl", { api_server_ip = aws_instance.api_server.private_ip })
+    user_data = templatefile("${path.module}/build-webserver-vm.tpl", { api_server_ip = aws_instance.api_server.private_ip })
 
     depends_on = [aws_instance.api_server]
 
