@@ -2,20 +2,30 @@ provider "aws" {
     region = "us-east-1"
 }
 
-#default vpc
-data "aws_vpc" "default" {
-    default = true
+data "aws_availability_zones" "available" {
+    state = "available"
 }
 
-#default subnet
 data "aws_subnets" "default" {
     filter {
-        name    = "vpc-id"
-        values  = [data.aws_vpc.default.id]
+        name    = "availability-zone"
+        values  = slice(data.aws_availability_zones.available.names, 0, 2)
+    }
+
+    filter {
+        name    = "default-for-az"
+        values  = ["true"]
     }
 }
 
+resource "aws_db_subnet_group" "mysql_subnet_group" {
+    name        = "mysql_subnet_group"
+    subnet_ids  = data.aws_subnets.default.ids
 
+    tags = {
+        Name = "MySQL DB Subnet Group"
+    }
+}
 
 resource "aws_security_group" "allow_ssh" {
     name        = "allow_ssh"
@@ -90,7 +100,7 @@ resource "aws_security_group" "allow_mysql" {
     description = "Allow inbound MySQL traffic"
 
     ingress {
-        description     = "MySQL from anywhere"
+        description     = "MySQL from VPC"
         from_port       = 3306
         to_port         = 3306
         protocol        = "tcp" 
@@ -105,34 +115,6 @@ resource "aws_security_group" "allow_mysql" {
     }
 }
 
-resource "aws_instance" "web_server" {
-    ami             = "ami-052064a798f08f0d3"
-    instance_type   = "t2.micro"
-    key_name        = "cosc349-2025"
-
-    vpc_security_group_ids = [aws_security_group.allow_ssh.allow_ssh.id, aws_security_group.allow_ssh.allow_api.id, allow_ssh.allow_web.id]
-
-    user_data = templatefile("${path.module}/build-webserver-vm.tpl", { api_server_ip = aws.instance.api_server.private_ip })
-
-    tags = {
-        Name = "shell_game_webserver"
-    }
-}
-
-resource "aws_instance" "api_server" {
-    ami             = "ami-052064a798f08f0d3"
-    instance_type   = "t2.micro"
-    key_name        = "cosc349-2025"
-
-    vpc_security_group_ids = [aws_security_group.allow_ssh.allow_ssh.id, aws_security_group.allow_ssh.allow_api.id, allow_ssh.allow_web.id, allow_ssh.allow_mysql.id]
-
-    user_data = templatefile("${path.module}/build-apiserver-vm.tpl", { mysql_server_ip = aws_db_instance.mysql_server.private_ip, web_server_ip = aws_instance.web_server.private_ip })
-
-    tags = {
-        Name = "shell_game_apiserver"
-    }
-}
-
 resource "aws_db_instance" "mysql_server" {
     identifier = "shell-game-mysql-server"
 
@@ -140,13 +122,59 @@ resource "aws_db_instance" "mysql_server" {
     engine_version  = "8.0"
     instance_class  = "db.t3.micro"
 
+    allocated_storage = 20
 
-    vpc_security_group_ids = [aws_security_group.allow_ssh.allow_ssh.id, aws_security_group.allow_ssh.allow_api.id, allow_ssh.allow_mysql.id]
+    db_name         = "fvision"
+    username        = "webuser"
+    password        = "insecure_db_pw"
 
-    user_data = templatefile("${path.module}/build-dbserver-vm.tpl", { mysql_server_ip = aws_db_instance.mysql_server.private_ip, api_server_ip = aws_instance.api_server.private_ip })
+
+    vpc_security_group_ids  = [aws_security_group.allow_mysql.id]
+    db_subnet_group_name    = aws_db_subnet_group.mysql_subnet_group.name
+
+    publicly_accessible = false
+    skip_final_snapshot = true
 
     tags = {
         Name = "shell-game-mysql-server"
+    }
+}
+
+resource "aws_instance" "api_server" {
+    ami             = "ami-0360c520857e3138f"
+    instance_type   = "t2.micro"
+    key_name        = "cosc349-2025"
+
+    vpc_security_group_ids = [
+        aws_security_group.allow_ssh.id, 
+        aws_security_group.allow_api.id
+    ]
+
+    user_data = templatefile("/vagrant/tf-deploy/build-apiserver-vm.tpl", {     mysql_server_endpoint = aws_db_instance.mysql_server.endpoint })
+
+    depends_on = [aws_db_instance.mysql_server]
+
+    tags = {
+        Name = "shell_game_apiserver"
+    }
+}
+
+resource "aws_instance" "web_server" {
+    ami             = "ami-0360c520857e3138f"
+    instance_type   = "t2.micro"
+    key_name        = "cosc349-2025"
+
+    vpc_security_group_ids = [
+        aws_security_group.allow_ssh.id, 
+        aws_security_group.allow_web.id
+    ]
+
+    user_data = templatefile("/vagrant/tf-deploy/build-webserver-vm.tpl", { api_server_ip = aws_instance.api_server.private_ip })
+
+    depends_on = [aws_instance.api_server]
+
+    tags = {
+        Name = "shell_game_webserver"
     }
 }
 
@@ -159,6 +187,6 @@ output "api_server_ip" {
 }
 
 output "mysql_server_ip" {
-  value = aws_db_instance.mysql_server.public_ip
+  value = aws_db_instance.mysql_server.endpoint
 }
 
