@@ -5,12 +5,15 @@ import mysql.connector
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-DB_CONFIG = {
-    'host': '192.168.56.12',
-    'user': 'webuser',
-    'password': 'insecure_db_pw',
-    'database': 'fvision'
-}
+try:
+    from config import DB_CONFIG
+except ImportError:
+    DB_CONFIG = {
+        'host': '192.168.56.12',
+        'user': 'webuser',
+        'password': 'insecure_db_pw',
+        'database': 'fvision'
+    }
 
 # Adds an artifact - was generated with AI as this was just a small function to also display database changes
 @app.route('/add_artifact', methods=['POST'])

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Update Ubuntu software packages.
 apt-get update
 
@@ -12,6 +14,15 @@ pip3 install flask-cors
 
 # Create the api directory if it doesn't exist
 mkdir -p /home/vagrant/api
+
+cat > /home/vagrant/api/config.py << EOF
+DB_CONFIG = {
+    'host': ${mysql_server_ip},
+    'user': 'webuser',
+    'password': 'insecure_db_pw',
+    'database': 'fvision'
+}
+EOF
 
 #Change VM's apiserver's cofiguration to use shared folder.
 cp /vagrant/api/api.py /home/vagrant/api/api.py
