@@ -6,17 +6,19 @@ exec > /var/log/user-data.log 2>&1
 apt-get update
 
 # Install Python and pip
-apt-get install -y python3 python3-pip
+apt-get install -y python3 python3-venv python3-full python3-flask python3-flask-cors 
 
-pip3 install flask flask-cors 
-pip3 install PyMySQL
-# Create the api directory if it doesn't exist
-mkdir -p /home/ubuntu/api
-
+apt-get install -y python3-mysql.connector
 
 apt-get install -y mysql-client-core-8.0 || apt-get install -y mysql-client || apt-get install -y default-mysql-client
 
-cat > /home/ubuntu/api/setup-db.sql << EOF
+mkdir -p /home/ubuntu/api
+chown ubuntu:ubuntu /home/ubuntu/api
+chmod 755 /home/ubuntu/api
+
+cd /home/ubuntu/api
+
+cat > /home/ubuntu/api/setup.sql << 'SQLEOF'
 CREATE TABLE IF NOT EXISTS artifacts (
     code VARCHAR(20),
     name VARCHAR(50) NOT NULL,
@@ -37,8 +39,10 @@ INSERT INTO artifacts VALUES ('shell2','Scallops', 'https://www.shells-of-aquari
 INSERT INTO artifacts VALUES ('shell3','Rose Petal Tellin', 'https://www.shells-of-aquarius.com/images/sunrise_tellina.jpg');
 INSERT INTO artifacts VALUES ('shell4','Pear Whelk', 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Fulguropsis_spirata_pahayokee_01.JPG');
 INSERT INTO artifacts VALUES ('shell5','Nutmeg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Cancellaria_reticulata_01.JPG/1200px-Cancellaria_reticulata_01.JPG');
-EOF
+SQLEOF
 
+chown ubuntu:ubuntu /home/ubuntu/api/setup.sql
+chmod 644 /home/ubuntu/api/setup.sql
 
 DB_HOST=$(echo "${mysql_server_endpoint}" | cut -d: -f1)
 
@@ -46,13 +50,17 @@ until mysql -h $DB_HOST -P 3306 -u webuser -p'insecure_db_pw' -e "SELECT 1" >/de
     sleep 10
 done
 
-mysql -h $DB_HOST -P 3306 -u webuser -p'insecure_db_pw' fvision < /home/ubuntu/api/setup-db.sql
+mysql -h $DB_HOST -P 3306 -u webuser -p'insecure_db_pw' fvision < /home/ubuntu/api/setup.sql
 
 #Change VM's apiserver's cofiguration to use shared folder.
-cat > /home/ubuntu/api/api.py << EOF
+cat > /home/ubuntu/api/api.py << 'PYEOF'
+#!/usr/bin/env python3
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pymysql
+import mysql.connector
+from mysql.connector import Error
+import sys
+import traceback
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -63,31 +71,13 @@ DB_HOST = DB_ENDPOINT.split(':')[0] if ':' in DB_ENDPOINT else DB_ENDPOINT
 
 DB_CONFIG = {
     'host': DB_HOST,
+    'port': 3306,
     'user': 'webuser',
     'password': 'insecure_db_pw',
-    'database': 'fvision'
+    'database': 'fvision',
+    'ssl_disabled': True
 }
 
-@app.route('/health'), methods=['GET'])
-def health_check():
-    try:
-        conn = pymysql.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM artifacts")
-        count = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
-        db_status = f"connected - {count} artifacts found"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-    
-    return jsonify({
-        'status': 'healthy', 
-        'service': 'shell-game-api',
-        'db_host': DB_HOST,
-        'db_status': db_status,
-        'mysql_library': 'PyMySQL'
-    })
 # Adds an artifact - was generated with AI as this was just a small function to also display database changes
 @app.route('/add_artifact', methods=['POST'])
 def add_artifact():
@@ -98,7 +88,7 @@ def add_artifact():
     name = data.get('name')
     img = data.get('img')
     try:
-        conn = pymysql.connect(**DB_CONFIG)
+        conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO artifacts (code, name, img) VALUES (%s, %s, %s)",
@@ -115,7 +105,7 @@ def add_artifact():
 @app.route('/', methods=['GET'])
 def get_artifacts():
     try:
-        conn = pymysql.connect(**DB_CONFIG)
+        conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT code, name, img FROM artifacts")
         results = cursor.fetchall()
@@ -132,7 +122,7 @@ def check_match():
     code = data.get('code')
     name = data.get('name')
     try:
-        conn = pymysql.connect(**DB_CONFIG)
+        conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor(dictionary=True)
         query = "SELECT * FROM artifacts WHERE code = %s AND name = %s"
         cursor.execute(query, (code, name))
@@ -145,7 +135,17 @@ def check_match():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8888)
-EOF
+PYEOF
+
+python3 -m py_compile /home/ubuntu/api/api.py
+if [ $? -eq 0 ]; then
+    echo "Python syntax: OK"
+else
+    echo "Python syntax: ERROR"
+fi
+
+chown ubuntu:ubuntu /home/ubuntu/api/api.py
+chmod 755 /home/ubuntu/api/api.py
 
 #Run api script in the background 
 nohup python3 /home/ubuntu/api/api.py > /home/ubuntu/api/log.txt 2>&1 &

@@ -3,6 +3,10 @@
 apt-get update
 apt-get install -y apache2
 
+exec > /var/log/user-data.log 2>&1
+
+rm /var/www/html/index.html
+
 cat > /var/www/html/index.html << 'EOF'
 <!DOCTYPE html>
 <html>
@@ -27,6 +31,12 @@ cat > /var/www/html/index.html << 'EOF'
 </head>
 <body>
     <h1>Match the Name to the Shell</h1>
+
+    <div class="api-info">
+        API Server: <a href="http://${api_server_ip}:8888/" target="_blank" class="api-link">http://${api_server_ip}:8888/</a><br>
+    </div>
+
+
     <p>Click on a name, then click on the matching image.</p>
     <table>
         <tr>
