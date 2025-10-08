@@ -1,7 +1,7 @@
 # Cloud-based Shell Matching Game
 
 ## Authors
-Aleisha Telea (funal259) (app design and implementation from Virtualisation-based Game)
+Aleisha Telea (funal259) (app design and implementation from Virtualisation-based Game)  
 Steven Simpson (simst522)  
 
 ## Description
@@ -19,20 +19,18 @@ The application uses two EC2 cloud instances and a MySQL database instance:
 
 To use the application simply clone the repository into a local directory.   
 
-Then navigated to the helper vm directory and run _vagrant up_. From there run _vagrant ssh_ to ssh into the vm.  
+Then navigate to the helper vm directory and run _vagrant up_. From there run _vagrant ssh_ to ssh into the vm.  
 
 In order to access AWS CLI functionality, create /.aws/credentials and add in AWS CLI credentials (located in AWS Details on Leaner Lab). Then navigate to the /vagrant/tf-deploy directory.  
 
 Here, run _terraform init_ to initialise terraform, then _terraform plan_ to observe proposed build and finally _terraform apply_ to deploy.  
 
 Once built, the output should show the public ip addresses of the web and api servers, as well as the rds endpoint.  
-
 Note: you will need to wait until both status check indicators for the ec2 server instances show as 'checks passed' to access web content.  
 
 Then access webpage using public ip address found in the terraform output or on the web server instance on learner lab ec2 instances.  
 
 The command _vagrant halt_  can be used to stop the helper vm, if needed.  
-
 If you need to remove all traces of the app, first run terraform destroy form /vagrant/tf-deploy, then exit vagrant helper vm and run vagrant destroy. 
 
 On average, the total run time from cloned repository to built application is around 10-15 mins.   
@@ -46,7 +44,7 @@ Refreshing the webpage also refreshes the game and all shells are displayed on t
 ## Troubleshooting Setup
 
 Sometimes when building using Vagrant and VirtualBox on Windows machines, the vagrant build hangs on the SSH setup stage for the VMs.  
-A simple fix  that was discovered for Windows was to navigate to 'Network Connections' and disable/re-enable the VirtualBox Host-only Adapter. 
+A simple fix that was discovered for Windows was to navigate to 'Network Connections' and disable/re-enable the VirtualBox Host-only Adapter. 
 
 
 
