@@ -1,9 +1,8 @@
 # Cloud-based Shell Matching Game
 
 ## Authors
-Aleisha Telea (funal259) (app design and implementation from Virtualisation-based Game)  
 Steven Simpson (simst522)  
-
+  
 ## Description
 This is an application operating on multiple AWS Cloud-based instances for an assignment in a University of Otago Cloud Computing paper (COSC349).  
 
@@ -46,5 +45,6 @@ Refreshing the webpage also refreshes the game and all shells are displayed on t
 Sometimes when building using Vagrant and VirtualBox on Windows machines, the vagrant build hangs on the SSH setup stage for the VMs.  
 A simple fix that was discovered for Windows was to navigate to 'Network Connections' and disable/re-enable the VirtualBox Host-only Adapter. 
 
-
+## Acknowledgement  
+Aleisha Telea (funal259) (app design and implementation from Virtualisation-based Game) 
 
