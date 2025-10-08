@@ -134,7 +134,7 @@ def check_match():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8888)
+    app.run(host='0.0.0.0', port=8888, debug=False)
 PYEOF
 
 python3 -m py_compile /home/ubuntu/api/api.py
@@ -147,6 +147,9 @@ fi
 chown ubuntu:ubuntu /home/ubuntu/api/api.py
 chmod 755 /home/ubuntu/api/api.py
 
-#Run api script in the background 
-nohup python3 /home/ubuntu/api/api.py > /home/ubuntu/api/log.txt 2>&1 &
+#run api
+cd /home/ubuntu/api
+nohup python3 api.py > /home/ubuntu/api/log.txt 2>&1 &
+
+
 

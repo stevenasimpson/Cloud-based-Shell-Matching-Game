@@ -1,9 +1,28 @@
 #!/bin/bash
+exec > /var/log/user-data.log 2>&1
 
 apt-get update
 apt-get install -y apache2
 
-exec > /var/log/user-data.log 2>&1
+a2enmod ssl
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/apache-selfsigned.key \
+    -out /etc/ssl/certs/apache-selfsigned.crt \
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+
+cat > /etc/apache2/sites-available/default-ssl.conf << 'SSLEOF'
+<IfModule mod_ssl.c>
+    <VirtualHost _default_:443>
+        DocumentRoot /var/www/html
+        SSLEngine on
+        SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key 
+        SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt 
+    </VirtualHost>
+</IfModule>
+SSLEOF
+
+a2ensite default-ssl
 
 rm /var/www/html/index.html
 
@@ -33,9 +52,8 @@ cat > /var/www/html/index.html << 'EOF'
     <h1>Match the Name to the Shell</h1>
 
     <div class="api-info">
-        API Server: <a href="http://${api_server_ip}:8888/" target="_blank" class="api-link">http://${api_server_ip}:8888/</a><br>
+        API Server: <a ref="http://${api_server_ip}:8888/ target="_blank" class="api-link">follow this link</a><br>
     </div>
-
 
     <p>Click on a name, then click on the matching image.</p>
     <table>
