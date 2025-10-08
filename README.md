@@ -48,12 +48,3 @@ A simple fix that was discovered for Windows was to navigate to 'Network Connect
 
 
 
-
-
-# Cloud-based-Shell-Matching-Game
-
-change key name
-ami updated to 2025 revision
-
-
-
