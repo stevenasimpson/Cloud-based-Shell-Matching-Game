@@ -10,7 +10,7 @@ The application is simple game that matches shell names to an image that represe
 
 The application uses two EC2 cloud instances and a MySQL database instance:
 1. An EC2 Apache web server hosting the webpage
-2. An EC2 Flask/Gunicorn API server for handling database requests
+2. An EC2 Flask API server for handling database requests
 3. A MySQL RDS server for handling data storage  
 
 ## App Access
