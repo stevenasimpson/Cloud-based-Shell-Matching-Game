@@ -17,7 +17,7 @@ The application uses two EC2 cloud instances and a MySQL database instance:
 
 Assuming the current implementation is still running using an active AWS Learner Lab instance, accessing the web application is straight-forward.   
 
-The IP address of the webpage can be found in the EC2 Instances dashboard, under public IPv4 address for the _shell_game_webserver_.
+The IP address of the webpage can be found in the EC2 Instances dashboard, under public IPv4 address for the _shell_game_webserver_ instance.
 
 ## App Setup
 
