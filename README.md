@@ -19,6 +19,8 @@ Assuming the current implementation is still running using an active AWS Learner
 
 The IP address of the webpage can be found in the EC2 Instances dashboard, under public IPv4 address for the _shell_game_webserver_ instance.
 
+If the app is not accessible due to the AWS Learner Lab instance not longer being active, follow the application setup instructions below. 
+
 ## App Setup
 
 To use the application simply clone the repository into a local directory.   
