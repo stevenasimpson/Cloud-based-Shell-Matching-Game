@@ -52,7 +52,7 @@ cat > /var/www/html/index.html << 'EOF'
     <h1>Match the Name to the Shell</h1>
 
     <div class="api-info">
-        API Server: <a ref="http://${api_server_ip}:8888/ target="_blank" class="api-link">follow this link</a><br>
+        API Server: <a href="http://${api_server_ip}:8888/" target="_blank" class="api-link">follow this link</a><br>
     </div>
 
     <p>Click on a name, then click on the matching image.</p>
