@@ -13,6 +13,11 @@ The application uses two EC2 cloud instances and a MySQL database instance:
 2. An EC2 Flask/Gunicorn API server for handling database requests
 3. A MySQL RDS server for handling data storage  
 
+## App Access
+
+Assuming the current implementation is still running using an active AWS Learner Lab instance, accessing the web application is straight-forward.   
+
+The IP address of the webpage can be found in the EC2 Instances dashboard, under public IPv4 address for the _shell_game_webserver_.
 
 ## App Setup
 
